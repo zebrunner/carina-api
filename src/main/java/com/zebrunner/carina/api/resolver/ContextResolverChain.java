@@ -26,6 +26,10 @@ import java.util.function.Function;
 
 public class ContextResolverChain {
 
+    private ContextResolverChain() {
+        //hide
+    }
+
     private static final List<ContextResolver<? extends AnnotatedElement>> CONTEXT_RESOLVERS = List.of(
             new AnnotationContextResolver(),
             new PropertiesContextResolver(),

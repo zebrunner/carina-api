@@ -16,16 +16,20 @@
 package com.zebrunner.carina.api.http;
 
 import com.zebrunner.carina.proxy.SystemProxy;
-
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 /*
  * HttpClient - sends HTTP request with specified parameters and returns response.
- * 
+ *
  * @author Alex Khursevich
  */
 public class HttpClient {
+
+    private HttpClient() {
+        // hide
+    }
+
     public static Response send(RequestSpecification request, String methodPath, HttpMethodType methodType) {
         Response response = null;
         SystemProxy.setupProxy();

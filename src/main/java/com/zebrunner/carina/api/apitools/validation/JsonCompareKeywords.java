@@ -24,7 +24,7 @@ public enum JsonCompareKeywords {
     PREDICATE("predicate:"),
     OGNL("ognl:");
 
-    private String key;
+    private final String key;
 
     JsonCompareKeywords(String key) {
         this.key = key;
@@ -33,9 +33,4 @@ public enum JsonCompareKeywords {
     public String getKey() {
         return key;
     }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
 }

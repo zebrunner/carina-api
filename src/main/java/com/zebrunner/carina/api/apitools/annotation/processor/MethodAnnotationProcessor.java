@@ -35,7 +35,7 @@ public class MethodAnnotationProcessor implements AnnotationProcessor<Method> {
     }
 
     @Override
-    public <A extends Annotation> Optional<Method> findFirstConditionalElement(Method element, Predicate<Method> condition) {
+    public Optional<Method> findFirstConditionalElement(Method element, Predicate<Method> condition) {
         return condition.test(element) ? Optional.of(element) : Optional.empty();
     }
 

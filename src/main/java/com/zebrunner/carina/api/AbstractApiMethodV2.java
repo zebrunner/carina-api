@@ -15,20 +15,12 @@
  *******************************************************************************/
 package com.zebrunner.carina.api;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.AnnotatedElement;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zebrunner.carina.api.annotation.ContentType;
 import com.zebrunner.carina.api.apitools.builder.PropertiesProcessor;
+import com.zebrunner.carina.api.apitools.builder.PropertiesProcessorMain;
+import com.zebrunner.carina.api.apitools.message.TemplateMessage;
 import com.zebrunner.carina.api.apitools.validation.JsonComparatorContext;
 import com.zebrunner.carina.api.apitools.validation.JsonKeywordsComparator;
 import com.zebrunner.carina.api.apitools.validation.JsonValidator;
@@ -37,25 +29,34 @@ import com.zebrunner.carina.api.apitools.validation.XmlValidator;
 import com.zebrunner.carina.api.http.HttpResponseStatus;
 import com.zebrunner.carina.api.log.LoggingOutputStream;
 import com.zebrunner.carina.api.resolver.ContextResolverChain;
+import io.restassured.response.Response;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.zebrunner.carina.api.apitools.builder.PropertiesProcessorMain;
-import com.zebrunner.carina.api.apitools.message.TemplateMessage;
-import com.zebrunner.carina.api.annotation.ContentType;
-
-import io.restassured.response.Response;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.AnnotatedElement;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 
 public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    
     private static final String ACCEPT_ALL_HEADER = "Accept=*/*";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
+    private static final String PROPERTIES_NOT_INITIALIZED_EXCEPTION = "API method properties are not initialized!";
+    private static final String RESPONSE_BODY_IS_NULL_EXCEPTION = "Actual response body is null. Please make API call before validation response";
     private Properties properties;
     private List<Class<? extends PropertiesProcessor>> ignoredPropertiesProcessorClasses;
     private String rqPath;
@@ -151,7 +152,7 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
             String bodyContent = objectMapper.writeValueAsString(body);
             setBodyContent(bodyContent);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new UncheckedIOException(e.getMessage(), e);
         }
     }
 
@@ -163,15 +164,14 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
             tm.setPropertiesStorage(properties);
             setBodyContent(tm.getMessageText());
         } else {
-            ContextResolverChain.resolveRequestBody(getAnchorElement()).ifPresent(requestBodyContainer -> {
-                requestBodyContainer.getBody().ifPresent(body -> {
-                    if (requestBodyContainer.isJson()) {
-                        setBodyContent(body.toString());
-                    } else {
-                        setRequestBody(body);
-                    }
-                });
-            });
+            ContextResolverChain.resolveRequestBody(getAnchorElement()).ifPresent(requestBodyContainer -> requestBodyContainer.getBody()
+                    .ifPresent(body -> {
+                        if (requestBodyContainer.isJson()) {
+                            setBodyContent(body.toString());
+                        } else {
+                            setRequestBody(body);
+                        }
+                    }));
         }
     }
 
@@ -235,11 +235,11 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
                 try (InputStream propertiesStream = baseResource.openStream()) {
                     properties.load(propertiesStream);
                 } catch (IOException e) {
-                    throw new RuntimeException("Properties can't be loaded by path: " + propertiesPath, e);
+                    throw new UncheckedIOException("Properties can't be loaded by path: " + propertiesPath, e);
                 }
-                LOGGER.info("Base properties loaded: " + propertiesPath);
+                LOGGER.info("Base properties loaded: {}", propertiesPath);
             } else {
-                throw new RuntimeException("Properties can't be found by path: " + propertiesPath);
+                throw new UncheckedIOException(new FileNotFoundException("Properties can't be found by path: " + propertiesPath));
             }
         }
         return Optional.ofNullable(properties);
@@ -267,23 +267,17 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
     }
 
     public void addProperties(Map<String, ?> props) {
-        if (properties == null) {
-            throw new RuntimeException("API method properties are not initialized!");
-        }
+        Objects.requireNonNull(properties, PROPERTIES_NOT_INITIALIZED_EXCEPTION);
         properties.putAll(props);
     }
 
     public void addProperty(String key, Object value) {
-        if (properties == null) {
-            throw new RuntimeException("API method properties are not initialized!");
-        }
+        Objects.requireNonNull(properties, PROPERTIES_NOT_INITIALIZED_EXCEPTION);
         properties.put(key, value);
     }
 
     public void removeProperty(String key) {
-        if (properties == null) {
-            throw new RuntimeException("API method properties are not initialized!");
-        }
+        Objects.requireNonNull(properties, PROPERTIES_NOT_INITIALIZED_EXCEPTION);
         properties.remove(key);
     }
 
@@ -331,14 +325,10 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
      *            Use JsonCompareKeywords.ARRAY_CONTAINS.getKey() construction for that
      */
     public void validateResponse(JSONCompareMode mode, JsonComparatorContext comparatorContext, String... validationFlags) {
-        if (rsPath == null) {
-            throw new RuntimeException("Please specify rsPath to make Response body validation");
-        }
+        Objects.requireNonNull(rsPath, "Please specify rsPath to make Response body validation");
+        Objects.requireNonNull(actualRsBody, RESPONSE_BODY_IS_NULL_EXCEPTION);
         if (properties == null) {
             properties = new Properties();
-        }
-        if (actualRsBody == null) {
-            throw new RuntimeException("Actual response body is null. Please make API call before validation response");
         }
         TemplateMessage tm = new TemplateMessage();
         tm.setIgnoredPropertiesProcessorClasses(ignoredPropertiesProcessorClasses);
@@ -358,12 +348,8 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
      * @param mode - determines how to compare 2 XMLs. See {@link XmlCompareMode} for more details.
      */
     public void validateXmlResponse(XmlCompareMode mode) {
-        if (actualRsBody == null) {
-            throw new RuntimeException("Actual response body is null. Please make API call before validation response");
-        }
-        if (rsPath == null) {
-            throw new RuntimeException("Please specify rsPath to make Response body validation");
-        }
+        Objects.requireNonNull(actualRsBody, RESPONSE_BODY_IS_NULL_EXCEPTION);
+        Objects.requireNonNull(rqPath, "Please specify rsPath to make Response body validation");
         XmlValidator.validateXml(actualRsBody, rsPath, mode);
     }
 
@@ -392,10 +378,7 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
      * @param schemaPath Path to schema file in resources
      */
     public void validateResponseAgainstSchema(String schemaPath) {
-        if (actualRsBody == null) {
-            throw new RuntimeException("Actual response body is null. Please make API call before validation response");
-        }
-
+        Objects.requireNonNull(actualRsBody, RESPONSE_BODY_IS_NULL_EXCEPTION);
         switch (contentTypeEnum) {
         case JSON:
             TemplateMessage tm = new TemplateMessage();

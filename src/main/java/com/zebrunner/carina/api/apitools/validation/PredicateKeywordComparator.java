@@ -39,7 +39,7 @@ final class PredicateKeywordComparator implements JsonKeywordComparator {
                     actualValue = null;
                 }
                 if (!predicate.test(actualValue)) {
-                    result.fail(String.format("%s\nActual value '%s' doesn't match to expected predicate '%s'\n", prefix, actualValue, expPredicate));
+                    result.fail(String.format("%s%nActual value '%s' doesn't match to expected predicate '%s'%n", prefix, actualValue, expPredicate));
                 }
             } else {
                 result.compareByDefault(prefix, expectedValue, actualValue);
