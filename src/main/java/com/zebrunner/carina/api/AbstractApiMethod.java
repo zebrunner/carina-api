@@ -15,8 +15,43 @@
  *******************************************************************************/
 package com.zebrunner.carina.api;
 
-import static io.restassured.RestAssured.given;
+import com.zebrunner.carina.api.http.ContentTypeEnum;
+import com.zebrunner.carina.api.http.HttpClient;
+import com.zebrunner.carina.api.http.HttpMethodType;
+import com.zebrunner.carina.api.http.HttpResponseStatus;
+import com.zebrunner.carina.api.http.HttpResponseStatusType;
+import com.zebrunner.carina.api.interceptor.InterceptorChain;
+import com.zebrunner.carina.api.log.CarinaRequestBodyLoggingFilter;
+import com.zebrunner.carina.api.log.CarinaResponseBodyLoggingFilter;
+import com.zebrunner.carina.api.log.LoggingOutputStream;
+import com.zebrunner.carina.api.resolver.ContextResolverChain;
+import com.zebrunner.carina.api.resolver.RequestStartLine;
+import com.zebrunner.carina.api.ssl.NullHostnameVerifier;
+import com.zebrunner.carina.api.ssl.NullX509TrustManager;
+import com.zebrunner.carina.api.ssl.SSLContextBuilder;
+import com.zebrunner.carina.utils.Configuration;
+import com.zebrunner.carina.utils.Configuration.Parameter;
+import com.zebrunner.carina.utils.R;
+import io.restassured.RestAssured;
+import io.restassured.config.RestAssuredConfig;
+import io.restassured.config.SSLConfig;
+import io.restassured.filter.log.LogDetail;
+import io.restassured.filter.log.RequestLoggingFilter;
+import io.restassured.filter.log.ResponseLoggingFilter;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.xml.HasXPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedElement;
@@ -29,45 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-
-import com.zebrunner.carina.api.http.HttpResponseStatus;
-import com.zebrunner.carina.api.http.HttpResponseStatusType;
-import com.zebrunner.carina.api.interceptor.InterceptorChain;
-import com.zebrunner.carina.api.resolver.ContextResolverChain;
-import com.zebrunner.carina.api.resolver.RequestStartLine;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.hamcrest.xml.HasXPath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
-
-import com.zebrunner.carina.api.http.ContentTypeEnum;
-import com.zebrunner.carina.api.http.HttpClient;
-import com.zebrunner.carina.api.http.HttpMethodType;
-import com.zebrunner.carina.api.log.CarinaRequestBodyLoggingFilter;
-import com.zebrunner.carina.api.log.CarinaResponseBodyLoggingFilter;
-import com.zebrunner.carina.api.log.LoggingOutputStream;
-import com.zebrunner.carina.api.ssl.NullHostnameVerifier;
-import com.zebrunner.carina.api.ssl.NullX509TrustManager;
-import com.zebrunner.carina.api.ssl.SSLContextBuilder;
-import com.zebrunner.carina.utils.Configuration;
-import com.zebrunner.carina.utils.Configuration.Parameter;
-import com.zebrunner.carina.utils.R;
-
-import io.restassured.RestAssured;
-import io.restassured.config.RestAssuredConfig;
-import io.restassured.config.SSLConfig;
-import io.restassured.filter.log.LogDetail;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
+import static io.restassured.RestAssured.given;
 
 public abstract class AbstractApiMethod extends HttpClient {
 
@@ -80,7 +77,7 @@ public abstract class AbstractApiMethod extends HttpClient {
     protected String methodPath;
     protected HttpMethodType methodType;
     protected Object response;
-    public RequestSpecification request;
+    protected RequestSpecification request;
     protected ContentTypeEnum contentTypeEnum;
     private boolean logRequest = Configuration.getBoolean(Parameter.LOG_ALL_JSON);
     private boolean logResponse = Configuration.getBoolean(Parameter.LOG_ALL_JSON);
@@ -241,7 +238,7 @@ public abstract class AbstractApiMethod extends HttpClient {
         request.expect().body(key, value);
     }
 
-    public <T> void expectResponseContainsXpath(String xPath) {
+    public void expectResponseContainsXpath(String xPath) {
         request.expect().body(HasXPath.hasXPath(xPath));
     }
 
@@ -334,10 +331,14 @@ public abstract class AbstractApiMethod extends HttpClient {
         return request;
     }
 
+    public void setRequest(RequestSpecification request) {
+        this.request = request;
+    }
+
     public String getRequestBody() {
         return bodyContent.toString();
     }
-    
+
     public Object getResponse() {
         return response;
     }

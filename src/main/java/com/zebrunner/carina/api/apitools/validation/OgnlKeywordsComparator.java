@@ -43,7 +43,7 @@ final class OgnlKeywordsComparator implements JsonKeywordComparator {
             if (expressionResult instanceof Boolean) {
                 boolean valid = (Boolean) expressionResult;
                 if (!valid) {
-                    result.fail(String.format("%s\nActual value '%s' doesn't match to expected OGNL expression '%s'\n", prefix, actualValue, expectedExpression));
+                    result.fail(String.format("%s%nActual value '%s' doesn't match to expected OGNL expression '%s'%n", prefix, actualValue, expectedExpression));
                 }
             } else {
                 result.compareByDefault(prefix, expectedValue, actualValue);

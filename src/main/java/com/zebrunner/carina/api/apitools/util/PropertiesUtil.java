@@ -15,18 +15,23 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.util;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Properties;
 
 public class PropertiesUtil {
+
+    private PropertiesUtil() {
+        //hide
+    }
 
     public static Properties readProperties(String path) {
         Properties prop = new Properties();
         try {
             prop.load(PropertiesUtil.class.getClassLoader().getResourceAsStream(path));
-        } catch (Exception e) {
-            throw new RuntimeException("Can't read properties from file", e);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Can't read properties from file", e);
         }
         return prop;
     }
-
 }

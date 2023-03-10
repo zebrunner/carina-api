@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.binding;
 
-import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 import com.zebrunner.carina.api.AbstractApiMethod;
 import com.zebrunner.carina.api.AbstractApiMethodV2;
 import com.zebrunner.carina.api.MethodBasedApiMethod;
 import com.zebrunner.carina.api.annotation.EndpointTemplateMethod;
+import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -45,7 +45,8 @@ public class TemplateInvocationHandler implements InvocationHandler {
         Object result;
         if (isMethodValid(method)) {
             if (!(AbstractApiMethod.class.isAssignableFrom(method.getReturnType()))) {
-                throw new RuntimeException(String.format("Method %s should return instance of %s class", method.getName(), AbstractApiMethod.class.getName()));
+                throw new ClassCastException(
+                        String.format("Method %s should return instance of %s class", method.getName(), AbstractApiMethod.class.getName()));
             }
             AnnotatedElement anchorElement = new RuntimeMethod(proxy, method, args);
             result = createAnchorElementBasedInstance(method.getReturnType(), anchorElement);

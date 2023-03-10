@@ -22,7 +22,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xmlunit.assertj3.XmlAssert;
 import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.diff.*;
+import org.xmlunit.diff.Comparison;
+import org.xmlunit.diff.ComparisonResult;
+import org.xmlunit.diff.DefaultNodeMatcher;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.ElementSelectors;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ public class XmlComparator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private XmlComparator() {
+        // hide
     }
 
     /**
@@ -85,10 +90,10 @@ public class XmlComparator {
         List<Node> parentControlNodes = constructParentNodesHierarchy(controlNode);
         List<Node> parentTestNodes = constructParentNodesHierarchy(testNode);
         if (parentControlNodes.size() != parentTestNodes.size()) {
-            LOGGER.info("Size of parent test nodes: " + parentTestNodes.size() +
-                    ", size of parent control nodes: " + parentControlNodes.size()
-                    + ". XML files are considered different because of different target nodes" +
-                    " placement in the hierarchy.");
+            LOGGER.info("Size of parent test nodes: {}" +
+                    ", size of parent control nodes: {}" +
+                    ". XML files are considered different because of different target nodes" +
+                    " placement in the hierarchy.", parentTestNodes.size(), parentControlNodes.size());
             return false;
         }
         for (int i = 0; i < parentControlNodes.size(); ++i) {
@@ -109,9 +114,6 @@ public class XmlComparator {
             return testNode;
         }
         NodeList children = testNode.getChildNodes();
-        if (children == null) {
-            return null;
-        }
         for (int i = 0; i < children.getLength(); ++i) {
             Node childNode = children.item(i);
             Node foundNode = findEqualNodeInHierarchy(controlNode, childNode);

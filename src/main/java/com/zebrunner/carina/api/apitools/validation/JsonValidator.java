@@ -15,12 +15,13 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.validation;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -32,18 +33,17 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandles;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JsonValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private JsonValidator() {
+		//hide
 	}
 
 	public static void validateJson(String expectedJson, String actualJson, JSONCompareMode jsonCompareMode) {
@@ -61,7 +61,7 @@ public class JsonValidator {
 	public static void validateJsonAgainstSchema(String jsonSchema, String jsonData) {
 		Matcher m = Pattern.compile("\\d+", Pattern.MULTILINE).matcher(jsonSchema);
 		if (m.find()) {
-			int schemaVersion = Integer.valueOf(m.group());
+			int schemaVersion = Integer.parseInt(m.group());
 			if (schemaVersion <= 4) {
 				LOGGER.info("JSON schema of version below or equal to draft-04 was detected");
 				validateJsonAgainstSchemaV3V4(jsonSchema, jsonData);
@@ -82,12 +82,12 @@ public class JsonValidator {
 		try {
 			schemaNode = JsonLoader.fromString(jsonSchema);
 		} catch (IOException e) {
-			throw new RuntimeException("Can't read schema from String: " + e.getMessage(), e);
+			throw new UncheckedIOException("Can't read schema from String: " + e.getMessage(), e);
 		}
 		try {
 			data = JsonLoader.fromString(jsonData);
 		} catch (IOException e) {
-			throw new RuntimeException("Can't read json from String: " + e.getMessage(), e);
+			throw new UncheckedIOException("Can't read json from String: " + e.getMessage(), e);
 		}
 
 		JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
@@ -107,10 +107,8 @@ public class JsonValidator {
 		if (report.isSuccess()) {
 			LOGGER.info("Validation against Json schema successfully passed");
 		} else {
-			StringBuffer result = new StringBuffer("Validation against Json schema failed: \n");
-			Iterator<ProcessingMessage> itr = report.iterator();
-			while (itr.hasNext()) {
-				ProcessingMessage message = (ProcessingMessage) itr.next();
+			StringBuilder result = new StringBuilder("Validation against Json schema failed: \n");
+			for (ProcessingMessage message : report) {
 				JsonNode json = message.asJson();
 				String instance = json.get("instance").get("pointer").asText();
 				String errorMsg = json.get("message").asText();
@@ -129,22 +127,25 @@ public class JsonValidator {
 		try {
 			rawSchema = new JSONObject(new JSONTokener(jsonSchema));
 		} catch (JSONException e) {
-			throw new RuntimeException("Can't parse json schema from file: " + e.getMessage(), e);
+			throw new JSONException("Can't parse json schema from file: " + e.getMessage(), e);
 		}
 
 		JSONObject data;
 		try {
 			data = new JSONObject(new JSONTokener(jsonData));
 		} catch (JSONException e) {
-			throw new RuntimeException("Can't parse json data schema from file: " + e.getMessage(), e);
+			throw new JSONException("Can't parse json data schema from file: " + e.getMessage(), e);
 		}
 
 		Schema schema = SchemaLoader.load(rawSchema);
-		StringBuffer result = new StringBuffer("Validation against Json schema failed: \n");
+		StringBuilder result = new StringBuilder("Validation against Json schema failed: \n");
 		try {
 			schema.validate(data);
 		} catch (ValidationException ex) {
-			ex.getAllMessages().stream().peek(e -> result.append("\n")).forEach(result::append);
+			for (String e : ex.getAllMessages()) {
+				result.append("\n")
+						.append(e);
+			}
 			throw new AssertionError(result.toString());
 		}
 	}

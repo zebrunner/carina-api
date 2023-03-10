@@ -15,17 +15,22 @@
  *******************************************************************************/
 package com.zebrunner.carina.api;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.util.UUID;
-
 import com.zebrunner.carina.utils.report.ReportContext;
-
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
+import java.util.UUID;
 
 public class APIMethodBuilder {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private final File temp;
     private final PrintStream ps;
 
@@ -33,8 +38,8 @@ public class APIMethodBuilder {
         temp = new File(String.format("%s/%s.tmp", ReportContext.getTempDir().getAbsolutePath(), UUID.randomUUID()));
         try {
             ps = new PrintStream(temp);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (FileNotFoundException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -50,8 +55,9 @@ public class APIMethodBuilder {
     public void close() {
         try {
             ps.close();
-            temp.delete();
+            Files.delete(temp.toPath());
         } catch (Exception e) {
+            LOGGER.error("Error when called close method of APIMethodBuilder class.", e);
         }
     }
 }

@@ -32,7 +32,7 @@ public class ConditionalLoggingOutputStream extends LoggingOutputStream {
      * @param level the log level
      * @throws IllegalArgumentException in case if one of arguments is null.
      */
-    public ConditionalLoggingOutputStream(Logger log, Level level) throws IllegalArgumentException {
+    public ConditionalLoggingOutputStream(Logger log, Level level) {
         super(log, level);
     }
 

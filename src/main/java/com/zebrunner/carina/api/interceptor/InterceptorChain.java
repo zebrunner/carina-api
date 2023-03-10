@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.interceptor;
 
-import com.zebrunner.carina.api.apitools.annotation.AnnotationContext;
-import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 import com.zebrunner.carina.api.AbstractApiMethod;
 import com.zebrunner.carina.api.AbstractApiMethodV2;
 import com.zebrunner.carina.api.annotation.LinkedInterceptors;
+import com.zebrunner.carina.api.apitools.annotation.AnnotationContext;
+import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
@@ -74,20 +74,25 @@ public class InterceptorChain {
         try {
             action.accept(interceptor);
         } catch (ClassCastException e) {
-            throw new RuntimeException(String.format(
-                    "Unable to use the %s interceptor. Make sure your interceptor's generic type is %s",
+            throw new ClassCastException(String.format(
+                    "Unable to use the %s interceptor. Make sure your interceptor's generic type is %s. Original error: %s",
                     interceptor.getClass().getSimpleName(),
-                    recognizeApiMethodSuperClass(this.apiMethod.getClass()).getSimpleName()
-            ), e);
+                    recognizeApiMethodSuperClass(this.apiMethod.getClass()).getSimpleName(),
+                    e.getMessage()
+            ));
         }
     }
 
     private Class<?> recognizeApiMethodSuperClass(Class<?> apiMethodClass) {
-        boolean baseApiMethodClass = AbstractApiMethodV2.class.getName().equals(apiMethodClass.getName()) || AbstractApiMethod.class.getName().equals(apiMethodClass.getName());
-        if (!baseApiMethodClass) {
-            return recognizeApiMethodSuperClass(apiMethodClass.getSuperclass());
+        if (AbstractApiMethodV2.class.isAssignableFrom(apiMethodClass)) {
+            return AbstractApiMethodV2.class;
         }
-        return apiMethodClass;
+
+        if (AbstractApiMethod.class.isAssignableFrom(apiMethodClass)) {
+            return AbstractApiMethod.class;
+        }
+        throw new ClassCastException(
+                String.format("Class %s has no AbstractApiMethodV2 or AbstractApiMethod class as parent class.", apiMethodClass));
     }
 
     @SuppressWarnings("unchecked")
@@ -117,7 +122,8 @@ public class InterceptorChain {
 
     private static ApiMethodInterceptor<? extends AbstractApiMethod> createInstance(Class<? extends ApiMethodInterceptor<? extends AbstractApiMethod>> interceptorClass) {
         try {
-            return interceptorClass.getConstructor().newInstance();
+            return interceptorClass.getConstructor()
+                    .newInstance();
         } catch (Exception e) {
             throw new RuntimeException(String.format("Failed to instantiate %s class", interceptorClass.getSimpleName()), e);
         }

@@ -21,11 +21,14 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class GenerationUtil {
+
     public static final String DEFAULT_TIME_ZONE = "America/Los_Angeles";
-
     private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-
     private static final Random RANDOM = new Random();
+
+    private GenerationUtil() {
+        //hide
+    }
 
     public static String generateTime(String format, int offset, int calendarUnit, String timeZone) {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -42,11 +45,11 @@ public class GenerationUtil {
     }
 
     private static String generateBase(int keySize) {
-        String base = "";
+        StringBuilder base = new StringBuilder();
         for (int i = 0; i < keySize; i++) {
-            base += String.valueOf(RANDOM.nextInt(9));
+            base.append(RANDOM.nextInt(9));
         }
-        return base;
+        return base.toString();
     }
 
     public static String generateWord(int keySize) {
@@ -56,7 +59,7 @@ public class GenerationUtil {
         int sign = -1;
         for (int i = 0; i < keySize; i++) {
 
-            int step = Integer.valueOf(base.substring(i, i + 1)) * sign;
+            int step = Integer.parseInt(base.substring(i, i + 1)) * sign;
             if (position + step > 0 && position + step < ALPHABET.length() - 1) {
                 position += step;
             } else {
@@ -75,12 +78,4 @@ public class GenerationUtil {
         }
         return result.toString();
     }
-
-    // public static Calendar setTimeZone(Calendar inCalendar, String tz) {
-    // long inTime = inCalendar.getTime().getTime();
-    // long outTime = inTime + TimeZone.getTimeZone(tz).getRawOffset();
-    // Calendar outCalendar = Calendar.getInstance(TimeZone.getTimeZone(tz));
-    // outCalendar.setTimeInMillis(outTime);
-    // return outCalendar;
-    // }
 }
