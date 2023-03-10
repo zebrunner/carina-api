@@ -26,10 +26,6 @@ import io.restassured.specification.RequestSpecification;
  */
 public class HttpClient {
 
-    private HttpClient() {
-        // hide
-    }
-
     public static Response send(RequestSpecification request, String methodPath, HttpMethodType methodType) {
         Response response = null;
         SystemProxy.setupProxy();

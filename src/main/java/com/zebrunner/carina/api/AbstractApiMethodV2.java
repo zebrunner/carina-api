@@ -349,7 +349,7 @@ public abstract class AbstractApiMethodV2 extends AbstractApiMethod {
      */
     public void validateXmlResponse(XmlCompareMode mode) {
         Objects.requireNonNull(actualRsBody, RESPONSE_BODY_IS_NULL_EXCEPTION);
-        Objects.requireNonNull(rqPath, "Please specify rsPath to make Response body validation");
+        Objects.requireNonNull(rsPath, "Please specify rsPath to make Response body validation");
         XmlValidator.validateXml(actualRsBody, rsPath, mode);
     }
 

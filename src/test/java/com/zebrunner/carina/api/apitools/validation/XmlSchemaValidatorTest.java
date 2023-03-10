@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-
+import java.nio.charset.StandardCharsets;
 
 public class XmlSchemaValidatorTest {
 
@@ -29,7 +29,7 @@ public class XmlSchemaValidatorTest {
     public void testValidateXmlSchemaSuccess1() throws IOException {
         String schema = "src/test/resources/validation/schema/schema_xml/schema.xml";
         String expectedRs = IOUtils.toString(XmlSchemaValidatorTest.class.getClassLoader().getResourceAsStream(
-                "validation/schema/schema_xml/expected.xml"), Charset.forName("UTF-8").toString());
+                "validation/schema/schema_xml/expected.xml"), StandardCharsets.UTF_8.toString());
         XmlValidator.validateXmlAgainstSchema(schema, expectedRs);
     }
 
@@ -37,7 +37,7 @@ public class XmlSchemaValidatorTest {
     public void testValidateXmlSchemaSuccess2() throws IOException {
         String schema = "src/test/resources/validation/schema/schema_xml/schema1.xml";
         String expectedRs = IOUtils.toString(XmlSchemaValidatorTest.class.getClassLoader().getResourceAsStream(
-                "validation/schema/schema_xml/expected1.xml"), Charset.forName("UTF-8").toString());
+                "validation/schema/schema_xml/expected1.xml"), StandardCharsets.UTF_8.toString());
         XmlValidator.validateXmlAgainstSchema(schema, expectedRs);
     }
 
@@ -45,7 +45,7 @@ public class XmlSchemaValidatorTest {
     public void testValidateXmlSchemaError() throws IOException {
         String schema = "src/test/resources/validation/schema/schema_xml/error_schema.xml";
         String expectedRs = IOUtils.toString(XmlSchemaValidatorTest.class.getClassLoader().getResourceAsStream(
-                "validation/schema/schema_xml/expected.xml"), Charset.forName("UTF-8").toString());
+                "validation/schema/schema_xml/expected.xml"), StandardCharsets.UTF_8.toString());
         boolean isErrorThrown = false;
         try {
             XmlValidator.validateXmlAgainstSchema(schema, expectedRs);

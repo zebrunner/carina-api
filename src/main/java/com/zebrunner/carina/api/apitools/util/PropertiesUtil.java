@@ -29,8 +29,8 @@ public class PropertiesUtil {
         Properties prop = new Properties();
         try {
             prop.load(PropertiesUtil.class.getClassLoader().getResourceAsStream(path));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Can't read properties from file", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't read properties from file", e);
         }
         return prop;
     }

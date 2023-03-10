@@ -160,7 +160,7 @@ public class CarinaBodyPrinter {
                         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
                         StringWriter writer = new StringWriter();
                         transformer.transform(new DOMSource(xmlDocument), new StreamResult(writer));
-                        body = writer.getBuffer().toString().replaceAll("\n|\r", "");
+                        body = writer.getBuffer().toString().replaceAll("[\n\r]", "");
                     } catch (Exception e) {
                         LOGGER.warn("Exception during parsing XML", e);
                     }
