@@ -23,6 +23,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Allows to specify a cookies in the request
+ */
 @Repeatable(Cookie.List.class)
 @Target(value = { ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Retention(value = RetentionPolicy.RUNTIME)
@@ -33,20 +36,16 @@ public @interface Cookie {
     String value();
 
     @Target(value = { ElementType.TYPE, ElementType.METHOD })
-    @Retention(value = RetentionPolicy.RUNTIME)
-    @interface List {
+    @Retention(value = RetentionPolicy.RUNTIME) @interface List {
 
         Cookie[] value();
-
     }
 
     @Target(value = { ElementType.PARAMETER })
     @Retention(value = RetentionPolicy.RUNTIME)
-    @Cookie(key = "", value = "")
-    @interface Value {
+    @Cookie(key = "", value = "") @interface Value {
 
         @RelatedTo(annotationClass = Cookie.class, field = "key")
         String key();
-
     }
 }

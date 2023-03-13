@@ -24,6 +24,10 @@ public class TemplateFactory {
 
     private static final Map<Class<?>, Object> templates = new ConcurrentHashMap<>();
 
+    private TemplateFactory() {
+        // hide
+    }
+
     @SuppressWarnings("unchecked")
     public static <M> M prepareTemplate(Class<M> mClass) {
         if (!isClassValid(mClass)) {

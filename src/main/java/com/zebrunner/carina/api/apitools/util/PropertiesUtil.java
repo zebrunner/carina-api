@@ -15,9 +15,15 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.util;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Properties;
 
 public class PropertiesUtil {
+
+    private PropertiesUtil() {
+        //hide
+    }
 
     public static Properties readProperties(String path) {
         Properties prop = new Properties();
@@ -28,5 +34,4 @@ public class PropertiesUtil {
         }
         return prop;
     }
-
 }

@@ -15,56 +15,42 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.builder;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.lang.invoke.MethodHandles;
-import java.util.Properties;
-
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
+import java.util.Properties;
 
 public class MessageBuilder {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private static final Configuration freemarkerConfiguration;
+    private static final Configuration FREEMARKER_CONFIGURATION;
 
     static {
-        freemarkerConfiguration = new Configuration();
-        freemarkerConfiguration.setTemplateLoader(new ClassTemplateLoader(MessageBuilder.class, "/"));
+        FREEMARKER_CONFIGURATION = new Configuration(Configuration.VERSION_2_3_0);
+        FREEMARKER_CONFIGURATION.setTemplateLoader(new ClassTemplateLoader(MessageBuilder.class, "/"));
+    }
+
+    private MessageBuilder() {
+        // hide
     }
 
     public static synchronized String buildStringMessage(String templatePath, Properties... propertiesArr) {
-        Template template;
-        try {
-            template = freemarkerConfiguration.getTemplate(templatePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        Properties resultProperties = new Properties();
-        for (Properties properties : propertiesArr) {
-            resultProperties.putAll(properties);
-        }
-
-        StringWriter sw = new StringWriter();
-        try {
+        try (StringWriter sw = new StringWriter()) {
+            Template template = FREEMARKER_CONFIGURATION.getTemplate(templatePath);
+            Properties resultProperties = new Properties();
+            for (Properties properties : propertiesArr) {
+                resultProperties.putAll(properties);
+            }
             template.process(resultProperties, sw);
+            return sw.getBuffer().toString();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         } catch (TemplateException e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                sw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
-        return sw.getBuffer().toString();
     }
 }

@@ -27,10 +27,9 @@ public interface AnnotationProcessor<E extends AnnotatedElement> {
 
     <A extends Annotation> Optional<AnnotationContext<A, E>> findFirstAnnotationContext(E element, Class<A> annClass);
 
-    <A extends Annotation> Optional<E> findFirstConditionalElement(E element, Predicate<E> condition);
+    Optional<E> findFirstConditionalElement(E element, Predicate<E> condition);
 
     <A extends Annotation> List<AnnotationContext<A, E>> findAllAnnotationContexts(E element, Class<A> annClass);
 
     AnnotatedElement covertToNextLevel(E element);
-
 }

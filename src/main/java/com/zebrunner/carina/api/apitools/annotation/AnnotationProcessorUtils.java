@@ -23,6 +23,10 @@ import java.util.stream.Stream;
 
 public class AnnotationProcessorUtils {
 
+    private AnnotationProcessorUtils() {
+        //hide
+    }
+
     public static <A extends Annotation> Optional<A> getAnnotation(AnnotatedElement element, Class<A> annClass) {
         return findAnnotatedElement(element, annClass)
                 .map(o -> doOnType(o, annotation -> proxyAnnotation(annotation, annClass), ae -> ae.getDeclaredAnnotation(annClass)));
@@ -30,20 +34,19 @@ public class AnnotationProcessorUtils {
 
     @SuppressWarnings("unchecked")
     private static <A extends Annotation> A proxyAnnotation(Annotation foundAnnotation, Class<A> annClass) {
-        A annotation = foundAnnotation.annotationType().getDeclaredAnnotation(annClass);
         List<Method> relatedMethods = Arrays.stream(foundAnnotation.annotationType().getDeclaredMethods())
                 .filter(AnnotationProcessorUtils::isAnnotationMethod)
                 .filter(method -> method.isAnnotationPresent(RelatedTo.class))
                 .filter(method -> method.getDeclaredAnnotation(RelatedTo.class).annotationClass().equals(annClass))
                 .collect(Collectors.toList());
 
-        return (A) Proxy.newProxyInstance(annClass.getClassLoader(), new Class[]{annClass}, (proxy, method, args) ->
+        return (A) Proxy.newProxyInstance(annClass.getClassLoader(), new Class[] { annClass }, (proxy, method, args) ->
                 relatedMethods.stream()
                         .filter(m -> m.getDeclaredAnnotation(RelatedTo.class).field().equals(method.getName()))
                         .findFirst()
                         .map(m -> invokeMethod(m, foundAnnotation, args))
-                        .orElseGet(() -> invokeMethod(method, annotation, args))
-        );
+                        .orElseGet(() -> invokeMethod(method, foundAnnotation.annotationType()
+                                .getDeclaredAnnotation(annClass), args)));
     }
 
     @SuppressWarnings("unchecked")

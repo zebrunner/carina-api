@@ -83,7 +83,7 @@ public class MethodBasedContextResolver implements ContextResolver<RuntimeMethod
         if (pathSlice.startsWith("/")) {
             pathSlice = pathSlice.substring(1);
         } else if (pathSlice.endsWith("/")) {
-            pathSlice = pathSlice.substring(0, pathSlice.lastIndexOf("/"));
+            pathSlice = pathSlice.substring(0, pathSlice.lastIndexOf('/'));
         } else {
             return pathSlice;
         }

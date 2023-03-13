@@ -27,7 +27,7 @@ final class RegexKeywordComparator implements JsonKeywordComparator {
             String regex = expectedValue.toString().replace(JsonCompareKeywords.REGEX.getKey(), "");
             Matcher m = Pattern.compile(regex).matcher(actualStr);
             if (!m.find()) {
-                result.fail(String.format("%s\nActual value '%s' doesn't match to expected regex '%s'\n", prefix, actualStr, regex));
+                result.fail(String.format("%s%nActual value '%s' doesn't match to expected regex '%s'%n", prefix, actualStr, regex));
             }
         } else {
             result.compareByDefault(prefix, expectedValue, actualValue);

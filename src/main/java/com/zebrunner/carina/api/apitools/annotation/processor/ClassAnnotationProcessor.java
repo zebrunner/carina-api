@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.annotation.processor;
 
+import com.zebrunner.carina.api.AbstractApiMethod;
 import com.zebrunner.carina.api.apitools.annotation.AnnotationContext;
 import com.zebrunner.carina.api.apitools.annotation.AnnotationProcessorUtils;
 import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 import com.zebrunner.carina.api.apitools.annotation.FirstElementDuplicateStrategy;
-import com.zebrunner.carina.api.AbstractApiMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -49,7 +49,7 @@ public class ClassAnnotationProcessor implements AnnotationProcessor<Class<?>> {
     }
 
     @Override
-    public <A extends Annotation> Optional<Class<?>> findFirstConditionalElement(Class<?> element, Predicate<Class<?>> condition) {
+    public Optional<Class<?>> findFirstConditionalElement(Class<?> element, Predicate<Class<?>> condition) {
         Optional<Class<?>> result;
         try {
             result = findFirstClassInHierarchy(element, condition);
@@ -63,8 +63,9 @@ public class ClassAnnotationProcessor implements AnnotationProcessor<Class<?>> {
         return findFirstClassInHierarchy(element, c -> AnnotationUtils.isAnnotatedPresent(c, annClass));
     }
 
-    private static <A extends Annotation> Optional<Class<?>> findFirstClassInHierarchy(Class<?> element, Predicate<Class<?>> condition) {
-        return AnnotationProcessorUtils.findFirstFoundItemInHierarchy(element, AbstractApiMethod.class, condition, c -> c, superClassesGetter, FirstElementDuplicateStrategy.ON_SAME_LEVEL);
+    private static Optional<Class<?>> findFirstClassInHierarchy(Class<?> element, Predicate<Class<?>> condition) {
+        return AnnotationProcessorUtils.findFirstFoundItemInHierarchy(element, AbstractApiMethod.class, condition, c -> c, superClassesGetter,
+                FirstElementDuplicateStrategy.ON_SAME_LEVEL);
     }
 
     @Override

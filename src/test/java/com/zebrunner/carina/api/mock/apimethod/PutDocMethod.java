@@ -17,7 +17,7 @@ package com.zebrunner.carina.api.mock.apimethod;
 
 import com.zebrunner.carina.api.AbstractApiMethodV2;
 
-@Deprecated
+@Deprecated(forRemoval = true, since = "1.0.0")
 public class PutDocMethod extends AbstractApiMethodV2 {
 
 	private String baseURL = "";

@@ -21,8 +21,8 @@ final class TypeKeywordComparator implements JsonKeywordComparator {
     public void compare(String prefix, Object expectedValue, Object actualValue, JsonCompareResultWrapper result) {
         String expType = expectedValue.toString().replace(JsonCompareKeywords.TYPE.getKey(), "");
         if (!expType.equals(actualValue.getClass().getSimpleName())) {
-            result.fail(String.format("%s\nValue type '%s' doesn't match to expected type '%s'\n", prefix, actualValue.getClass()
-                    .getSimpleName(), expType));
+            result.fail(String.format("%s%nValue type '%s' doesn't match to expected type '%s'%n",
+                    prefix, actualValue.getClass().getSimpleName(), expType));
         }
     }
 

@@ -50,7 +50,7 @@ public class ParameterAnnotationProcessor implements AnnotationProcessor<Runtime
     }
 
     @Override
-    public <A extends Annotation> Optional<RuntimeMethod> findFirstConditionalElement(RuntimeMethod element, Predicate<RuntimeMethod> condition) {
+    public Optional<RuntimeMethod> findFirstConditionalElement(RuntimeMethod element, Predicate<RuntimeMethod> condition) {
         throw new NotSupportedOperationException("Unable to find the first conditional parameter");
     }
 

@@ -13,16 +13,24 @@ import java.util.stream.Collectors;
 
 public class AnnotationUtils {
 
-    public static <A extends Annotation> List<AnnotationContext<A, AnnotatedElement>> findAllAnnotationContextsByChain(AnnotatedElement element, Class<A> annClass) {
+    private AnnotationUtils() {
+        // hide
+    }
+
+    public static <A extends Annotation> List<AnnotationContext<A, AnnotatedElement>> findAllAnnotationContextsByChain(AnnotatedElement element,
+            Class<A> annClass) {
         return resolveAnnotationProcessors(element).stream()
-                .map(annotationProcessor -> annotationProcessor.findAllAnnotationContexts(convertToProcessorElement(element, annotationProcessor), annClass))
+                .map(annotationProcessor -> annotationProcessor.findAllAnnotationContexts(convertToProcessorElement(element, annotationProcessor),
+                        annClass))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
-    public static <A extends Annotation> Optional<AnnotationContext<A, AnnotatedElement>> findFirstAnnotationContextByChain(AnnotatedElement element, Class<A> annClass) {
+    public static <A extends Annotation> Optional<AnnotationContext<A, AnnotatedElement>> findFirstAnnotationContextByChain(AnnotatedElement element,
+            Class<A> annClass) {
         return resolveAnnotationProcessors(element).stream()
-                .map(annotationProcessor -> annotationProcessor.findFirstAnnotationContext(convertToProcessorElement(element, annotationProcessor), annClass))
+                .map(annotationProcessor -> annotationProcessor.findFirstAnnotationContext(convertToProcessorElement(element, annotationProcessor),
+                        annClass))
                 .filter(Optional::isPresent)
                 .findFirst()
                 .orElse(Optional.empty());
@@ -30,7 +38,8 @@ public class AnnotationUtils {
 
     public static Optional<AnnotatedElement> findFirstConditionalElementByChain(AnnotatedElement element, Predicate<AnnotatedElement> condition) {
         return resolveAnnotationProcessors(element).stream()
-                .map(annotationProcessor -> annotationProcessor.findFirstConditionalElement(convertToProcessorElement(element, annotationProcessor), condition))
+                .map(annotationProcessor -> annotationProcessor.findFirstConditionalElement(convertToProcessorElement(element, annotationProcessor),
+                        condition))
                 .filter(Optional::isPresent)
                 .findFirst()
                 .orElse(Optional.empty());

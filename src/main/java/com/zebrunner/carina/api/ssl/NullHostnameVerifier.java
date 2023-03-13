@@ -15,20 +15,20 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.ssl;
 
-import java.io.IOException;
-import java.security.cert.X509Certificate;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
-
-import org.apache.http.conn.ssl.X509HostnameVerifier;
+import java.io.IOException;
+import java.security.cert.X509Certificate;
 
 @SuppressWarnings("deprecation")
 public class NullHostnameVerifier implements X509HostnameVerifier {
+    
+    @SuppressWarnings("all")
     @Override
     public boolean verify(String hostname, SSLSession session) {
-        // do nothing
         return true;
     }
 

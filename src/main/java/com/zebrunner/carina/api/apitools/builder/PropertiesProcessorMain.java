@@ -24,11 +24,15 @@ public class PropertiesProcessorMain {
 
     private static final List<PropertiesProcessor> processors;
 
+    private PropertiesProcessorMain() {
+        //hide
+    }
+
     static {
         processors = new ArrayList<>();
         processors.add(new GenerateProcessor());
         processors.add(new CryptoProcessor());
-		processors.add(new NotStringValuesProcessor());
+        processors.add(new NotStringValuesProcessor());
     }
 
     public static Properties processProperties(Properties in, List<Class<? extends PropertiesProcessor>> ignoredPropertiesProcessorClasses) {

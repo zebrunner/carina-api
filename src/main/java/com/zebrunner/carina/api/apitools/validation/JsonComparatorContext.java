@@ -39,7 +39,7 @@ public final class JsonComparatorContext {
         return this;
     }
 
-    public <T> JsonComparatorContext withComparator(JsonKeywordComparator comparator) {
+    public JsonComparatorContext withComparator(JsonKeywordComparator comparator) {
         if (comparator != null) {
             this.comparators.add(comparator);
         }
