@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.resolver;
 
+import com.zebrunner.carina.api.annotation.HideResponseHeadersInLogs;
 import com.zebrunner.carina.api.apitools.annotation.AnnotationContext;
 import com.zebrunner.carina.api.apitools.annotation.AnnotationUtils;
 import com.zebrunner.carina.api.annotation.ContentType;
@@ -112,6 +113,12 @@ public class MethodBasedContextResolver implements ContextResolver<RuntimeMethod
     public Optional<String[]> resolveHiddenRequestHeadersInLogs(RuntimeMethod element) {
         return AnnotationUtils.findFirstAnnotationContextByChain(element, HideRequestHeadersInLogs.class)
                 .map(context -> context.getValue(HideRequestHeadersInLogs::headers, o -> (String[]) o, new String[] {}));
+    }
+
+    @Override
+    public Optional<String[]> resolveHiddenResponseHeadersInLogs(RuntimeMethod element) {
+        return AnnotationUtils.findFirstAnnotationContextByChain(element, HideResponseHeadersInLogs.class)
+                .map(context -> context.getValue(HideResponseHeadersInLogs::headers, o -> (String[]) o, new String[] {}));
     }
 
     @Override

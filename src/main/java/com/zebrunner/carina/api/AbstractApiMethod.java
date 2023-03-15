@@ -23,6 +23,7 @@ import com.zebrunner.carina.api.http.HttpResponseStatusType;
 import com.zebrunner.carina.api.interceptor.InterceptorChain;
 import com.zebrunner.carina.api.log.CarinaRequestBodyLoggingFilter;
 import com.zebrunner.carina.api.log.CarinaResponseBodyLoggingFilter;
+import com.zebrunner.carina.api.log.CarinaResponseHeadersLoggingFilter;
 import com.zebrunner.carina.api.log.LoggingOutputStream;
 import com.zebrunner.carina.api.resolver.ContextResolverChain;
 import com.zebrunner.carina.api.resolver.RequestStartLine;
@@ -260,8 +261,11 @@ public abstract class AbstractApiMethod extends HttpClient {
         }
 
         if (logResponse) {
+            Set<String> headers = ContextResolverChain.resolveHiddenResponseHeadersInLogs(this.anchorElement)
+                    .orElse(Collections.emptySet());
+            ResponseLoggingFilter fHeaders = new CarinaResponseHeadersLoggingFilter(true, ps, Matchers.any(Integer.class), headers);
+
             ResponseLoggingFilter fStatus = new ResponseLoggingFilter(LogDetail.STATUS, ps);
-            ResponseLoggingFilter fHeaders = new ResponseLoggingFilter(LogDetail.HEADERS, ps);
             ResponseLoggingFilter fCookies = new ResponseLoggingFilter(LogDetail.COOKIES, ps);
 
             ResponseLoggingFilter fBody = ContextResolverChain.resolveHiddenResponseBodyPartsInLogs(this.anchorElement)
