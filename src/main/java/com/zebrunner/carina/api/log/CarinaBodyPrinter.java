@@ -138,8 +138,8 @@ public class CarinaBodyPrinter {
                     try {
                         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
                         // disable XML external entity (XXE) processing
-                        builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-                        builderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+                        builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                        builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
                         DocumentBuilder builder;
                         builder = builderFactory.newDocumentBuilder();
 
