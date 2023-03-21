@@ -16,12 +16,25 @@
 
 package com.zebrunner.carina.api.log;
 
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.lang.invoke.MethodHandles;
-import java.util.Set;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.zebrunner.carina.api.http.ContentTypeEnum;
+import groovy.xml.XmlParser;
+import io.restassured.internal.path.json.JsonPrettifier;
+import io.restassured.internal.path.xml.XmlPrettifier;
+import io.restassured.response.ResponseBody;
+import io.restassured.specification.FilterableRequestSpecification;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -32,57 +45,39 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
-import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-import com.zebrunner.carina.api.http.ContentTypeEnum;
-
-import groovy.xml.XmlParser;
-import io.restassured.internal.path.json.JsonPrettifier;
-import io.restassured.internal.path.xml.XmlPrettifier;
-import io.restassured.response.ResponseBody;
-import io.restassured.specification.FilterableRequestSpecification;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
+import java.util.Set;
 
 public class CarinaBodyPrinter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private static final String HIDDEN_PATTERN = "****************";
-
     private static final String NONE = "<none>";
     private static final String TAB = "\t";
-
     private static final Configuration JSON_PARSE_CFG = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider())
             .mappingProvider(new JacksonMappingProvider()).build();
+
+    private CarinaBodyPrinter() {
+        //hide
+    }
 
     /**
      * Prints the response to the print stream
      *
-     * @param responseBody ResponseBody&lt;?&gt;
-     *
-     * @param stream PrintStream
-     *
+     * @param responseBody      see {@link ResponseBody}
+     * @param stream            see {@link PrintStream}
      * @param shouldPrettyPrint boolean
-     *
-     * @param hiddenPaths Set&lt;String&gt;
-     *
-     * @param contentType ContentTypeEnum
+     * @param hiddenPaths       Set&lt;String&gt;
+     * @param contentType       see {@link ContentTypeEnum}
      * @return A string of representing the response
      */
     public static String printResponseBody(ResponseBody<?> responseBody, PrintStream stream, boolean shouldPrettyPrint, Set<String> hiddenPaths,
             ContentTypeEnum contentType) {
         final StringBuilder builder = new StringBuilder();
-        String responseBodyToAppend = new String(responseBody.asString());
+        String responseBodyToAppend = responseBody.asString();
 
         // replace values by paths
         responseBodyToAppend = replaceValues(responseBodyToAppend, hiddenPaths, contentType);
@@ -102,15 +97,11 @@ public class CarinaBodyPrinter {
     /**
      * Prints the request to the print stream
      *
-     * @param requestSpec FilterableRequestSpecification
-     *
-     * @param stream PrintStream
-     *
+     * @param requestSpec       see {@link FilterableRequestSpecification}
+     * @param stream            see {@link PrintStream}
      * @param shouldPrettyPrint boolean
-     *
-     * @param hiddenPaths Set&lt;String&gt;
-     *
-     * @param contentType ContentTypeEnum
+     * @param hiddenPaths       Set&lt;String&gt;
+     * @param contentType       see {@link ContentTypeEnum}
      */
     public static void printRequestBody(FilterableRequestSpecification requestSpec, PrintStream stream, boolean shouldPrettyPrint,
             Set<String> hiddenPaths, ContentTypeEnum contentType) {
@@ -146,6 +137,9 @@ public class CarinaBodyPrinter {
                 for (String p : hiddenPaths) {
                     try {
                         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                        // disable XML external entity (XXE) processing
+                        builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                        builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
                         DocumentBuilder builder;
                         builder = builderFactory.newDocumentBuilder();
 
@@ -158,18 +152,22 @@ public class CarinaBodyPrinter {
                         }
 
                         TransformerFactory tf = TransformerFactory.newInstance();
+                        // prohibit the use of all protocols by external entities
+                        tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+                        tf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
                         Transformer transformer = tf.newTransformer();
                         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
                         StringWriter writer = new StringWriter();
                         transformer.transform(new DOMSource(xmlDocument), new StreamResult(writer));
-                        body = writer.getBuffer().toString().replaceAll("\n|\r", "");
+                        body = writer.getBuffer().toString().replaceAll("[\n\r]", "");
                     } catch (Exception e) {
                         LOGGER.warn("Exception during parsing XML", e);
                     }
                 }
                 break;
             default:
-                LOGGER.warn(String.format("Content type '%s' is not supported for body parts hiding in logs", contentType));
+                LOGGER.warn("Content type '{}' is not supported for body parts hiding in logs", contentType);
             }
         }
         

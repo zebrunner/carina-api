@@ -15,17 +15,16 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.validation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 import org.skyscreamer.jsonassert.comparator.DefaultComparator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 
 public class JsonKeywordsComparator extends DefaultComparator {
 
@@ -64,7 +63,7 @@ public class JsonKeywordsComparator extends DefaultComparator {
     }
 
     @Override
-    public void compareValues(String prefix, Object expectedValue, Object actualValue, JSONCompareResult result) throws JSONException {
+    public void compareValues(String prefix, Object expectedValue, Object actualValue, JSONCompareResult result) {
         comparators.stream()
                 .filter(comparator -> comparator.isMatch(expectedValue))
                 .findFirst()
@@ -79,16 +78,13 @@ public class JsonKeywordsComparator extends DefaultComparator {
     }
 
     @Override
-    public void compareJSONArray(String prefix, JSONArray expected, JSONArray actual, JSONCompareResult result) throws JSONException {
-        if ((validationFlags != null && validationFlags.length > 0)
-                && (ArrayUtils.contains(validationFlags, JsonCompareKeywords.ARRAY_CONTAINS.getKey() + prefix))) {
-            // do not validate sizes for arrays
-        } else {
-            if (expected.length() != actual.length()) {
-                result.fail(String.format("%s[]\nArrays length differs. Expected length=%d but actual length=%d\n", prefix,
-                        expected.length(), actual.length()));
-                return;
-            }
+    public void compareJSONArray(String prefix, JSONArray expected, JSONArray actual, JSONCompareResult result) {
+        if ((!((validationFlags != null && validationFlags.length > 0) &&
+                (ArrayUtils.contains(validationFlags, JsonCompareKeywords.ARRAY_CONTAINS.getKey() + prefix)))) &&
+                expected.length() != actual.length()) {
+            result.fail(String.format("%s[]%nArrays length differs. Expected length=%d but actual length=%d%n", prefix,
+                    expected.length(), actual.length()));
+            return;
         }
 
         JSONArray actualTmp = new JSONArray();
@@ -138,8 +134,7 @@ public class JsonKeywordsComparator extends DefaultComparator {
         }
     }
 
-    private void compareJSONArrayForSimpleTypeWContains(String prefix, JSONArray expected, JSONArray actual, JSONCompareResult result)
-            throws JSONException {
+    private void compareJSONArrayForSimpleTypeWContains(String prefix, JSONArray expected, JSONArray actual, JSONCompareResult result) {
         if (expected.length() == 1 && JsonCompareKeywords.SKIP.getKey().equals(expected.get(0).toString())) {
             return;
         }
@@ -154,7 +149,7 @@ public class JsonKeywordsComparator extends DefaultComparator {
             }
 
             if (!isEquals) {
-                result.fail(String.format("%s\nExpected array item '" + expected.get(i) + "' is missed in actual array\n", prefix));
+                result.fail(String.format("%s%nExpected array item '%s' is missed in actual array%n", prefix, expected.get(i)));
             }
         }
     }

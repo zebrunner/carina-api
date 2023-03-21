@@ -26,6 +26,10 @@ import java.util.function.Function;
 
 public class ContextResolverChain {
 
+    private ContextResolverChain() {
+        //hide
+    }
+
     private static final List<ContextResolver<? extends AnnotatedElement>> CONTEXT_RESOLVERS = List.of(
             new AnnotationContextResolver(),
             new PropertiesContextResolver(),
@@ -52,6 +56,11 @@ public class ContextResolverChain {
 
     public static Optional<Set<String>> resolveHiddenRequestHeadersInLogs(AnnotatedElement element) {
         return getResolverValue(resolver -> resolver.resolveHiddenRequestHeadersInLogs(element), element)
+                .map(Set::of);
+    }
+
+    public static Optional<Set<String>> resolveHiddenResponseHeadersInLogs(AnnotatedElement element) {
+        return getResolverValue(resolver -> resolver.resolveHiddenResponseHeadersInLogs(element), element)
                 .map(Set::of);
     }
 

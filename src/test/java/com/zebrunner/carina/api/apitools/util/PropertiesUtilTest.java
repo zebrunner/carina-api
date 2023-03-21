@@ -20,6 +20,7 @@ import com.zebrunner.carina.utils.R;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.UncheckedIOException;
 import java.util.Properties;
 
 public class PropertiesUtilTest {

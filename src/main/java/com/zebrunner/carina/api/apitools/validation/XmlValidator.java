@@ -15,48 +15,49 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.apitools.validation;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.lang.invoke.MethodHandles;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class XmlValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private XmlValidator() {
+        // hide
     }
 
     /**
-     * @param actualXmlData String
+     * Validate XML
      *
+     * @param actualXmlData   String
      * @param expectedXmlPath String
-     *
-     * @param mode XmlCompareMode, determines how to compare 2 XMLs. See type description for more details.
+     * @param mode            XmlCompareMode, determines how to compare 2 XMLs. See type description for more details.
      */
     public static void validateXml(String actualXmlData, String expectedXmlPath, XmlCompareMode mode) {
-        try {
-            String expectedXmlData = Files.lines(Path.of(expectedXmlPath))
-                    .collect(Collectors.joining("\n"));
+        try(Stream<String> fileLines = Files.lines(Path.of(expectedXmlPath))) {
+            String expectedXmlData = fileLines.collect(Collectors.joining("\n"));
             if (mode == XmlCompareMode.NON_STRICT) {
                 XmlComparator.nonStrictOrderCompare(actualXmlData, expectedXmlData);
             } else {
                 XmlComparator.strictCompare(actualXmlData, expectedXmlData);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Can't read xml from String: " + e.getMessage(), e);
+            throw new UncheckedIOException("Can't read xml from String: " + e.getMessage(), e);
         }
         LOGGER.info("Validation of xml data successfully passed");
     }
@@ -67,14 +68,16 @@ public class XmlValidator {
         try {
             Schema schema = schemaFactory.newSchema(new File(xmlSchemaPath));
             Validator validator = schema.newValidator();
+            // Untrusted XML should be parsed with a local, static DTD
+            validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
             validator.validate(new StreamSource(new StringReader(xmlData)));
         } catch (SAXException e) {
             throw new AssertionError("Validation against Xml schema failed "  + e.getMessage(), e);
         } catch (IOException e) {
-            throw new RuntimeException("Can't read xml from String: " + e.getMessage(), e);
+            throw new UncheckedIOException("Can't read xml from String: " + e.getMessage(), e);
         }
         LOGGER.info("Validation against Xml schema successfully passed");
     }
 
 }
-

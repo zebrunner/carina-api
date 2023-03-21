@@ -15,23 +15,24 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.ssl;
 
+import com.zebrunner.carina.utils.Configuration;
+import com.zebrunner.carina.utils.Configuration.Parameter;
+import com.zebrunner.carina.utils.exception.InvalidConfigurationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.KeyStore;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.zebrunner.carina.utils.Configuration;
-import com.zebrunner.carina.utils.Configuration.Parameter;
 
 public class SSLContextBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -39,9 +40,9 @@ public class SSLContextBuilder {
     public static final String TC_CONF_DIR_PATH = "keysecure/";
 
     public static final String TRUSTSTORE_FILE = "truststore.jks";
-    public static final String TRUSTSTORE_PASSWORD = "changeit";
+    public static final String TRUSTSTORE_SECRET = "changeit";
     public static final String KEYSTORE_FILE = "tls.jks";
-    public static final String KEYSTORE_PASSWORD_FILE = "tls.properties";
+    public static final String KEYSTORE_SECRET_FILE = "tls.properties";
 
     private final File tlsConfigDirectory;
     private final boolean isClientAuthEnabled;
@@ -57,7 +58,7 @@ public class SSLContextBuilder {
     public SSLContextBuilder(String path, boolean isClientAuthEnabled) {
         this.tlsConfigDirectory = getTlsConfigDirectoryByPath(path);
         this.isClientAuthEnabled = isClientAuthEnabled;
-        LOGGER.info("Found tlsConfigDirectory=" + tlsConfigDirectory.getPath() + ", isClientAuthEnabled=" + isClientAuthEnabled);
+        LOGGER.info("Found tlsConfigDirectory={}, isClientAuthEnabled={}", tlsConfigDirectory.getPath(), isClientAuthEnabled);
     }
 
     /**
@@ -70,16 +71,16 @@ public class SSLContextBuilder {
     public SSLContextBuilder(boolean isClientAuthEnabled) {
         this.tlsConfigDirectory = findTlsConfigDirectory();
         this.isClientAuthEnabled = isClientAuthEnabled;
-        LOGGER.info("Found tlsConfigDirectory=" + tlsConfigDirectory.getPath() + ", isClientAuthEnabled=" + isClientAuthEnabled);
+        LOGGER.info("Found tlsConfigDirectory={}, isClientAuthEnabled={}", tlsConfigDirectory.getPath(), isClientAuthEnabled);
     }
 
     private File getTlsConfigDirectoryByPath(String path) {
         File directory = new File(path);
-        if (directory != null && directory.exists()) {
-            LOGGER.info("Directory exists: " + directory.getAbsolutePath());
+        if (directory.exists()) {
+            LOGGER.info("Directory exists: {}", directory.getAbsolutePath());
             return directory;
         } else {
-            throw new RuntimeException("Directory doesn't exist: " + directory.getAbsolutePath());
+            throw new UncheckedIOException(new FileNotFoundException("Directory doesn't exist: " + directory.getAbsolutePath()));
         }
     }
 
@@ -103,7 +104,7 @@ public class SSLContextBuilder {
             return new File(Configuration.get(Parameter.TLS_KEYSECURE_LOCATION));
         }
 
-        throw new RuntimeException("TLS files directory does not exist anywhere. Please check your configuration");
+        throw new InvalidConfigurationException("TLS files directory does not exist anywhere. Please check your configuration.");
     }
 
     /**
@@ -147,7 +148,7 @@ public class SSLContextBuilder {
             return null;
         } else {
             try {
-                return readKeyStore(new File(tlsConfigDirectory, TRUSTSTORE_FILE), TRUSTSTORE_PASSWORD.toCharArray());
+                return readKeyStore(new File(tlsConfigDirectory, TRUSTSTORE_FILE), TRUSTSTORE_SECRET.toCharArray());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -182,7 +183,7 @@ public class SSLContextBuilder {
     }
 
     private char[] readKeyStorePassword(File tlsDirectory) {
-        File keyStorePasswordFile = new File(tlsDirectory, KEYSTORE_PASSWORD_FILE);
+        File keyStorePasswordFile = new File(tlsDirectory, KEYSTORE_SECRET_FILE);
         try {
             return new String(Files.readAllBytes(keyStorePasswordFile.toPath()), "UTF-8").toCharArray();
         } catch (Exception e) {

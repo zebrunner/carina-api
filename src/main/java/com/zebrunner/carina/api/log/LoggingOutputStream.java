@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.log;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class LoggingOutputStream extends OutputStream {
 
@@ -60,15 +60,12 @@ public class LoggingOutputStream extends OutputStream {
 
     /**
      * Creates the Logging instance to flush to the given logger.
-     * 
-     * @param log
-     *            the Logger to write to
-     * @param level
-     *            the log level
-     * @throws IllegalArgumentException
-     *             in case if one of arguments is null.
+     *
+     * @param log   the Logger to write to
+     * @param level the log level
+     * @throws IllegalArgumentException in case if one of arguments is null.
      */
-    public LoggingOutputStream(final Logger log, final Level level) throws IllegalArgumentException {
+    public LoggingOutputStream(final Logger log, final Level level) {
         if (log == null || level == null) {
             throw new IllegalArgumentException("Logger or log level must be not null");
         }
