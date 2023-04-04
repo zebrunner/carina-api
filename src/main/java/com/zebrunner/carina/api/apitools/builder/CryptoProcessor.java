@@ -20,8 +20,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.testng.SkipException;
-
 import com.zebrunner.carina.utils.Configuration;
 import com.zebrunner.carina.crypto.Algorithm;
 import com.zebrunner.carina.crypto.CryptoTool;
@@ -58,7 +56,7 @@ public class CryptoProcessor implements PropertiesProcessor {
         if (this.cryptoTool == null) {
             String cryptoKey = Configuration.get(Configuration.Parameter.CRYPTO_KEY_VALUE);
             if (cryptoKey.isEmpty()) {
-                throw new SkipException("Encrypted data detected, but the crypto key is not found!");
+                throw new RuntimeException("Encrypted data detected, but the crypto key is not found!");
             }
             this.cryptoTool = CryptoToolBuilder.builder()
                     .chooseAlgorithm(Algorithm.find(Configuration.get(Configuration.Parameter.CRYPTO_ALGORITHM)))
