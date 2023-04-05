@@ -17,7 +17,6 @@ package com.zebrunner.carina.api.apitools.validation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xmlunit.assertj3.XmlAssert;
@@ -71,7 +70,15 @@ public class XmlComparator {
                     }
                     return outcome;
                 }).checkForSimilar().build();
-        Assert.assertFalse(differences.hasDifferences());
+        if (differences.hasDifferences()) {
+            LOGGER.debug("Actual XML: {}", actualXmlData);
+            LOGGER.debug("Expected XML: {}", expectedXmlData);
+            StringBuilder diffAsString = new StringBuilder();
+            differences.getDifferences().forEach(d -> diffAsString.append(d.toString())
+                    .append("\n"));
+            LOGGER.debug("Differences: {}", diffAsString);
+            throw new RuntimeException("nonStrictOrderCompare has difference, enable debug log level for details.");
+        }
     }
 
     private static ComparisonResult ascendingBruteForceParentNodesComparison(Comparison comparison, ComparisonResult outcome) {
