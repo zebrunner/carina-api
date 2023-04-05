@@ -70,8 +70,14 @@ public class XmlComparator {
                     }
                     return outcome;
                 }).checkForSimilar().build();
-        if(differences.hasDifferences()) {
-            throw new RuntimeException("Has difference.");
+        if (differences.hasDifferences()) {
+            LOGGER.debug("Actual XML: {}", actualXmlData);
+            LOGGER.debug("Expected XML: {}", expectedXmlData);
+            StringBuilder diffAsString = new StringBuilder();
+            differences.getDifferences().forEach(d -> diffAsString.append(d.toString())
+                    .append("\n"));
+            LOGGER.debug("Differences: {}", diffAsString);
+            throw new RuntimeException("nonStrictOrderCompare has difference, enable debug log level for details.");
         }
     }
 
