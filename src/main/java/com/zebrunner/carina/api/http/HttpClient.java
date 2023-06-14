@@ -15,9 +15,21 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.http;
 
-import com.zebrunner.carina.proxy.SystemProxy;
+import com.zebrunner.carina.utils.Configuration;
+import com.zebrunner.carina.utils.R;
+import com.zebrunner.carina.utils.commons.SpecialKeywords;
+import com.zebrunner.carina.utils.exception.InvalidConfigurationException;
 import io.restassured.response.Response;
+import io.restassured.specification.ProxySpecification;
+import io.restassured.specification.QueryableRequestSpecification;
 import io.restassured.specification.RequestSpecification;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
+import java.util.List;
 
 /*
  * HttpClient - sends HTTP request with specified parameters and returns response.
@@ -25,10 +37,12 @@ import io.restassured.specification.RequestSpecification;
  * @author Alex Khursevich
  */
 public class HttpClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static Response send(RequestSpecification request, String methodPath, HttpMethodType methodType) {
-        Response response = null;
-        SystemProxy.setupProxy();
+        Response response;
+        addProxy(request);
+        // SystemProxy.setupProxy();
         switch (methodType) {
         case HEAD:
             response = request.head(methodPath);
@@ -49,13 +63,60 @@ public class HttpClient {
             response = request.patch(methodPath);
             break;
         case OPTIONS:
-        		response = request.options(methodPath);
-        		break;
+            response = request.options(methodPath);
+            break;
         default:
-            throw new RuntimeException("MethodType is not specified for the API method: " + methodPath);
+            throw new IllegalArgumentException("MethodType is not specified for the API method: " + methodPath);
         }
 
         return response;
+    }
+
+    private static void addProxy(RequestSpecification requestSpecification) {
+        if (((QueryableRequestSpecification) requestSpecification).getProxySpecification() != null) {
+            LOGGER.debug("Request specification already contains proxy specification, so we will not add global proxy settings.");
+            return;
+        }
+        String proxyType = getConfigurationValue("proxy_type");
+        if (proxyType.isEmpty()) {
+            throw new InvalidConfigurationException("'proxy_type' should not be empty.");
+        }
+        if (!"MANUAL".equals(proxyType)) {
+            return;
+        }
+
+        String proxyHost = Configuration.get(Configuration.Parameter.PROXY_HOST);
+        Integer proxyPort = !Configuration.get(Configuration.Parameter.PROXY_PORT).isBlank() ?
+                Configuration.getInt(Configuration.Parameter.PROXY_HOST) : null;
+        List<String> protocols = Arrays.asList(Configuration.get(Configuration.Parameter.PROXY_PROTOCOLS)
+                .split("[\\s,]+"));
+
+        String proxyUsername = getConfigurationValue("proxy_username");
+        String proxyPassword = getConfigurationValue("proxy_password");
+
+        if (proxyHost.isEmpty() ||
+                proxyPort == null ||
+                protocols.isEmpty()) {
+            throw new InvalidConfigurationException("Cannot create proxy for API. 'proxy_host' or 'proxy_port' or 'proxy_protocols' are empty.");
+        }
+
+        if (!(protocols.contains("http") || protocols.contains("https"))) {
+            LOGGER.debug("proxy_protocols do not contains http/https, so we will not add proxy settings.");
+            return;
+        }
+
+        ProxySpecification proxySpecification = ProxySpecification.host(proxyHost)
+                .withPort(proxyPort);
+        if (!proxyUsername.isEmpty() && !proxyPassword.isEmpty()) {
+            proxySpecification.withAuth(proxyUsername, proxyPassword);
+        }
+        requestSpecification.proxy(proxySpecification);
+    }
+
+    // todo remove when params will be added to the Configuration class
+    private static String getConfigurationValue(String param) {
+        String value = R.CONFIG.get(param);
+        return !(value == null || value.equalsIgnoreCase(SpecialKeywords.NULL)) ? value : StringUtils.EMPTY;
     }
 
 }
