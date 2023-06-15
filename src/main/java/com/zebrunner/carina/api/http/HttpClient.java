@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.http;
 
-import com.zebrunner.carina.utils.Configuration;
 import com.zebrunner.carina.utils.R;
 import com.zebrunner.carina.utils.commons.SpecialKeywords;
 import com.zebrunner.carina.utils.exception.InvalidConfigurationException;
@@ -28,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
-import java.util.List;
 
 /*
  * HttpClient - sends HTTP request with specified parameters and returns response.
@@ -77,32 +74,21 @@ public class HttpClient {
             LOGGER.debug("Request specification already contains proxy specification, so we will not add global proxy settings.");
             return;
         }
-        String proxyType = getConfigurationValue("proxy_type");
-        if (proxyType.isEmpty()) {
-            throw new InvalidConfigurationException("'proxy_type' should not be empty.");
-        }
-        if (!"MANUAL".equals(proxyType)) {
+        boolean isEnabled = Boolean.parseBoolean(getConfigurationValue("carina.api.proxy.enable"));
+        if (!isEnabled) {
             return;
         }
 
-        String proxyHost = Configuration.get(Configuration.Parameter.PROXY_HOST);
-        Integer proxyPort = !Configuration.get(Configuration.Parameter.PROXY_PORT).isBlank() ?
-                Configuration.getInt(Configuration.Parameter.PROXY_HOST) : null;
-        List<String> protocols = Arrays.asList(Configuration.get(Configuration.Parameter.PROXY_PROTOCOLS)
-                .split("[\\s,]+"));
+        String proxyHost = getConfigurationValue("carina.api.proxy.host");
+        Integer proxyPort = !getConfigurationValue("carina.api.proxy.port").isEmpty() ?
+                Integer.parseInt(getConfigurationValue("carina.api.proxy.port")) : null;
 
-        String proxyUsername = getConfigurationValue("proxy_username");
-        String proxyPassword = getConfigurationValue("proxy_password");
+        String proxyUsername = getConfigurationValue("carina.api.proxy.username");
+        String proxyPassword = getConfigurationValue("carina.api.proxy.password");
 
-        if (proxyHost.isEmpty() ||
-                proxyPort == null ||
-                protocols.isEmpty()) {
-            throw new InvalidConfigurationException("Cannot create proxy for API. 'proxy_host' or 'proxy_port' or 'proxy_protocols' are empty.");
-        }
-
-        if (!(protocols.contains("http") || protocols.contains("https"))) {
-            LOGGER.debug("proxy_protocols do not contains http/https, so we will not add proxy settings.");
-            return;
+        if (proxyHost.isEmpty() || proxyPort == null) {
+            throw new InvalidConfigurationException(
+                    "Cannot create proxy for API. 'carina.api.proxy.host' or 'proxy_port' or 'carina.api.proxy.port' are empty.");
         }
 
         ProxySpecification proxySpecification = ProxySpecification.host(proxyHost)
