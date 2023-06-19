@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.zebrunner.carina.api;
 
+import com.zebrunner.carina.api.config.APIConfiguration;
 import com.zebrunner.carina.api.http.ContentTypeEnum;
 import com.zebrunner.carina.api.http.HttpClient;
 import com.zebrunner.carina.api.http.HttpMethodType;
@@ -30,9 +31,8 @@ import com.zebrunner.carina.api.resolver.RequestStartLine;
 import com.zebrunner.carina.api.ssl.NullHostnameVerifier;
 import com.zebrunner.carina.api.ssl.NullX509TrustManager;
 import com.zebrunner.carina.api.ssl.SSLContextBuilder;
-import com.zebrunner.carina.utils.Configuration;
-import com.zebrunner.carina.utils.Configuration.Parameter;
-import com.zebrunner.carina.utils.R;
+import com.zebrunner.carina.utils.config.Configuration;
+import com.zebrunner.carina.utils.config.StandardConfigurationOption;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
@@ -80,9 +80,9 @@ public abstract class AbstractApiMethod extends HttpClient {
     protected Object response;
     protected RequestSpecification request;
     protected ContentTypeEnum contentTypeEnum;
-    private boolean logRequest = Configuration.getBoolean(Parameter.LOG_ALL_JSON);
-    private boolean logResponse = Configuration.getBoolean(Parameter.LOG_ALL_JSON);
-    private boolean ignoreSSL = Configuration.getBoolean(Parameter.IGNORE_SSL);
+    private boolean logRequest = Configuration.getRequired(APIConfiguration.Parameter.LOG_ALL_JSON, Boolean.class);
+    private boolean logResponse = Configuration.getRequired(APIConfiguration.Parameter.LOG_ALL_JSON, Boolean.class);
+    private boolean ignoreSSL = Configuration.getRequired(APIConfiguration.Parameter.IGNORE_SSL, Boolean.class);
 
     public AbstractApiMethod() {
         this(null);
@@ -129,10 +129,10 @@ public abstract class AbstractApiMethod extends HttpClient {
             if (param != null) {
                 if (param.startsWith(envParam)) {
                     String newParam = StringUtils.substringAfter(param, envParam);
-                    replaceUrlPlaceholder(param, Configuration.getEnvArg(newParam));
+                    replaceUrlPlaceholder(param, Configuration.get(newParam, StandardConfigurationOption.ENVIRONMENT).orElse(""));
                 } else if (param.startsWith(configParam)) {
                     String newParam = StringUtils.substringAfter(param, configParam);
-                    replaceUrlPlaceholder(param, R.CONFIG.get(newParam));
+                    replaceUrlPlaceholder(param, Configuration.get(newParam, StandardConfigurationOption.GLOBAL).orElse(""));
                 }
             }
         }

@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.zebrunner.carina.api.apitools.builder;
+package com.zebrunner.carina.utils.marshaller.exception;
 
-import com.zebrunner.carina.utils.encryptor.EncryptorUtils;
-import org.apache.commons.lang3.StringUtils;
+public class ParserException extends RuntimeException {
 
-import java.util.Map.Entry;
-import java.util.Properties;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2740305459532726278L;
 
-public class CryptoProcessor implements PropertiesProcessor {
-
-    @Override
-    public Properties process(Properties in) {
-        Properties out = new Properties();
-        for (Entry<Object, Object> entry : in.entrySet()) {
-            String tmp = entry.getValue().toString();
-            String decrypted = EncryptorUtils.decrypt(tmp);
-            if (!StringUtils.equals(tmp, decrypted))
-                out.put(entry.getKey(), decrypted);
-        }
-        return out;
+    public ParserException(String message) {
+        super(message);
     }
+
+    public ParserException(String message, Throwable e) {
+        super(message, e);
+    }
+
 }

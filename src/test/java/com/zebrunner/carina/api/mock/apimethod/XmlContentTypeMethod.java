@@ -19,7 +19,8 @@ import com.zebrunner.carina.api.AbstractApiMethodV2;
 import com.zebrunner.carina.api.annotation.ContentType;
 import com.zebrunner.carina.api.annotation.SuccessfulHttpStatus;
 import com.zebrunner.carina.api.http.HttpResponseStatusType;
-import com.zebrunner.carina.utils.Configuration;
+import com.zebrunner.carina.utils.config.Configuration;
+import com.zebrunner.carina.utils.config.StandardConfigurationOption;
 
 @ContentType(type = "application/xml")
 @SuccessfulHttpStatus(status = HttpResponseStatusType.OK_200)
@@ -27,6 +28,6 @@ public class XmlContentTypeMethod extends AbstractApiMethodV2 {
 
     public XmlContentTypeMethod() {
         super(null, "src/test/resources/validation/xml_file/object/expected_res.xml");
-        replaceUrlPlaceholder("base_url", Configuration.getEnvArg("api_url"));
+        replaceUrlPlaceholder("base_url", Configuration.getRequired("api_url", StandardConfigurationOption.ENVIRONMENT));
     }
 }

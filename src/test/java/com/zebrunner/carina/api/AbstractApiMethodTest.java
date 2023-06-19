@@ -15,10 +15,11 @@
  *******************************************************************************/
 package com.zebrunner.carina.api;
 
+import com.zebrunner.carina.utils.config.Configuration;
+import com.zebrunner.carina.utils.config.StandardConfigurationOption;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.zebrunner.carina.utils.Configuration;
 import com.zebrunner.carina.utils.R;
 import com.zebrunner.carina.api.mock.apimethod.AutoReplaceUrlPartsMethod;
 import com.zebrunner.carina.api.mock.apimethod.NoPlaceholdersInURLMethod;
@@ -46,7 +47,7 @@ public class AbstractApiMethodTest {
         final String id = "1";
         R.CONFIG.put("some_id", id);
         AutoReplaceUrlPartsMethod method = new AutoReplaceUrlPartsMethod();
-        final String expectedMethodPath = Configuration.getEnvArg("base_url") + "/mock/part/" + id;
+        final String expectedMethodPath = Configuration.get("base_url", StandardConfigurationOption.ENVIRONMENT).orElse("") + "/mock/part/" + id;
         Assert.assertEquals(method.getMethodPath(), expectedMethodPath);
     }
 }
