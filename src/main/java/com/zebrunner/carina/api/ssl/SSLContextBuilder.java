@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.zebrunner.carina.api.ssl;
 
-import com.zebrunner.carina.utils.Configuration;
-import com.zebrunner.carina.utils.Configuration.Parameter;
+import com.zebrunner.carina.api.config.APIConfiguration;
+import com.zebrunner.carina.utils.config.Configuration;
 import com.zebrunner.carina.utils.exception.InvalidConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,11 +100,10 @@ public class SSLContextBuilder {
         }
 
         // Priority 2: Searching by Parameter.TLS_KEYSECURE_LOCATION path
-        if (!Configuration.isNull(Parameter.TLS_KEYSECURE_LOCATION)) {
-            return new File(Configuration.get(Parameter.TLS_KEYSECURE_LOCATION));
-        }
-
-        throw new InvalidConfigurationException("TLS files directory does not exist anywhere. Please check your configuration.");
+        String tlsKeysecureLocation = Configuration.get(APIConfiguration.Parameter.TLS_KEYSECURE_LOCATION)
+                .orElseThrow(
+                        () -> new InvalidConfigurationException("TLS files directory does not exist anywhere. Please check your configuration."));
+        return new File(tlsKeysecureLocation);
     }
 
     /**

@@ -19,13 +19,14 @@ import com.zebrunner.carina.api.AbstractApiMethodV2;
 import com.zebrunner.carina.api.annotation.ResponseTemplatePath;
 import com.zebrunner.carina.api.annotation.SuccessfulHttpStatus;
 import com.zebrunner.carina.api.http.HttpResponseStatusType;
-import com.zebrunner.carina.utils.Configuration;
+import com.zebrunner.carina.utils.config.Configuration;
+import com.zebrunner.carina.utils.config.StandardConfigurationOption;
 
 @SuccessfulHttpStatus(status = HttpResponseStatusType.OK_200)
 @ResponseTemplatePath(path = "validation/array/duplicate/array_act.json")
 public class NoContentTypeMethod extends AbstractApiMethodV2 {
 
     public NoContentTypeMethod() {
-        replaceUrlPlaceholder("base_url", Configuration.getEnvArg("api_url"));
+        replaceUrlPlaceholder("base_url", Configuration.getRequired("api_url", StandardConfigurationOption.ENVIRONMENT));
     }
 }
