@@ -22,23 +22,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
 public class APIMethodBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private final File temp;
+    private final Path temp;
     private final PrintStream ps;
 
     public APIMethodBuilder() {
-        temp = new File(String.format("%s/%s.tmp", ReportContext.getTempDir().getAbsolutePath(), UUID.randomUUID()));
+        temp = ReportContext.getTempDirectory().resolve( UUID.randomUUID() + ".tmp");
         try {
-            ps = new PrintStream(temp);
-        } catch (FileNotFoundException e) {
+            ps = new PrintStream(Files.newOutputStream(temp));
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
@@ -49,13 +50,13 @@ public class APIMethodBuilder {
     }
 
     public File getTempFile() {
-        return temp;
+        return temp.toFile();
     }
 
     public void close() {
         try {
             ps.close();
-            Files.delete(temp.toPath());
+            Files.delete(temp);
         } catch (Exception e) {
             LOGGER.error("Error when called close method of APIMethodBuilder class.", e);
         }
